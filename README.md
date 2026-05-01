@@ -1,30 +1,36 @@
-# 🌐 WireGuard Auto Setup (极简双节点组网脚本)
+# 🌐 WireGuard Auto Setup (极简双节点组网与全能控制台)
 
-![Version](https://img.shields.io/badge/Version-V2.2-blue.svg)
+![Version](https://img.shields.io/badge/Version-V3.1-blue.svg)
 ![Bash](https://img.shields.io/badge/Language-Bash-green.svg)
 ![Platform](https://img.shields.io/badge/Platform-Linux-lightgrey.svg)
 
 本脚本旨在通过交互式的引导，帮助用户在**两台 Linux 服务器**（如内网机与公网云主机、或海外 IX 与落地机）之间，快速建立一条基于 **WireGuard** 的安全加密内网隧道。
 
-告别繁琐的密钥生成与路由配置，仅需跟着脚本的 `A -> B -> C` 三步走，即可在 1 分钟内完成端到端的隧道打通。
+在 **V3.x 版本**中，脚本不仅是一次性的组网工具，更进化为一个**常驻系统的全能战术控制台**。只需全局键入 `awg`，即可随时进行配置热修改与彻底清理。
 
 ---
 
-## ⚡ 核心特性
+## ⚡ 核心战术特性
 
 - 🤖 **全自动环境部署**：自动检测系统环境（Debian/Ubuntu/CentOS），一键安装 WireGuard 内核与必备工具。
 - 🔑 **自动化密钥流转**：自动生成 Private/Public Key，并在终端以卡片形式清晰展示，方便双端复制粘贴。
-- 🌍 **智能网络推算**：自动获取公网 IPv4，自动推算内网 IP 序列（如输入 `10.198.1.1` 会自动推算对端为 `10.198.1.2`），减少手动输入失误。
-- 🛡️ **底层自动保活**：自动配置 `PersistentKeepalive` 与内核 IPv4 转发 (`ip_forward`)，确保隧道长久存活不断流。
-- 🔌 **支持多路复用**：支持在初始化时自定义接口名称（如 `wg0`, `wg1`, `tun0`），轻松实现一台机器挂载多条不同的内网隧道。
+- 🌍 **智能网络推算**：自动获取公网 IPv4，自动推算内网 IP 序列（如输入 `10.198.1.1` 会自动推算对端为 `10.198.1.2`），杜绝手动输入失误。
+- 🎛️ **持久化管理面板**：内置 CRUD 管理生命周期。支持随时修改对端 Endpoint (IP:端口) 和 PublicKey，修改后自动重启并**热重载生效**。
+- 💣 **强迫症级卸载**：一键“核爆模式”。瞬间停止服务、清除自启、抹除所有密钥与配置文件，系统恢复如初。
+- 🔌 **支持多路复用**：支持在初始化时自定义接口名称（如 `wg0`, `wg1`, `tun0`），轻松实现一台机器挂载多条不同的独立隧道。
 
 ---
 
-## 📦 一键下载与执行
+## 📦 一键极速全局部署
 
-在需要组网的两台 Linux 机器上，使用 `root` 权限执行以下命令：
+在需要组网的两台 Linux 机器上，使用 `root` 权限执行以下命令进行全局植入：
 ```bash
-wget -O auto-wg.sh https://ghproxy.net/https://raw.githubusercontent.com/starshine369/auto-wg/main/auto-wg.sh && chmod +x auto-wg.sh && sudo ./auto-wg.sh
+sudo curl -sL https://ghproxy.net/https://raw.githubusercontent.com/starshine369/auto-wg/main/auto-wg.sh -o /usr/local/bin/awg && sudo chmod +x /usr/local/bin/awg && sudo awg
+```
+
+运行完上述指令后，脚本将被锁定在全局环境变量中。以后无论您身处哪个目录，只需输入以下短命令即可秒唤控制台：
+```bash
+awg
 ```
 
 ---
@@ -38,23 +44,35 @@ wget -O auto-wg.sh https://ghproxy.net/https://raw.githubusercontent.com/starshi
 请严格按照以下顺序执行：
 
 ### 🛠️ Step 1: 在【机器 A】上生成基础配置
-1. 在 **机器 A** 上运行脚本，输入网卡名（默认 `wg0`），然后选择模式：`[1] A. 本地机器 (内网)`。
-2. 脚本会询问 B 机器是否准备好，输入 `n`。
-3. 确认本机内网 IP（默认 `10.198.1.1`）。
-4. 脚本执行完毕后，会打印出一个**信息卡片**。**请不要关闭此窗口，复制卡片中的信息！**
+1. 在 **机器 A** 上输入 `sudo awg` 运行控制台。
+2. 确认工作网卡名（默认 `wg0`），选择模式：`[1] A. 本地机器 (内网)`。
+3. 脚本会询问 B 机器是否准备好，输入 `n`。
+4. 确认本机内网 IP（默认 `10.198.1.1`）。
+5. 脚本执行完毕后，会打印出一个**信息卡片**。**请不要关闭此窗口，复制卡片中的信息！**
 
 ### 🛠️ Step 2: 在【机器 B】上部署服务端
-1. 登录 **机器 B**，运行相同的脚本。
-2. 输入相同的网卡名（默认 `wg0`），选择模式：`[2] B. 其他机器 (云端)`。
+1. 登录 **机器 B**，同样执行全局部署命令，然后输入 `sudo awg`。
+2. 确认相同的网卡名（默认 `wg0`），选择模式：`[2] B. 其他机器 (云端)`。
 3. 根据提示，粘贴刚才从 **机器 A** 复制过来的 `PUBLIC KEY` 和 `内网 IP (10.198.1.1)`。
 4. 脚本会自动获取 B 的公网 IP 并生成配置。
 5. 执行完毕后，B 机器会打印出包含其公网 Endpoint 的**新信息卡片**。**复制这部分信息！**
 
 ### 🛠️ Step 3: 回到【机器 A】完成最终握手
-1. 回到 **机器 A** 的终端，再次运行脚本。
+1. 回到 **机器 A** 的终端，再次运行 `sudo awg`。
 2. 选择模式：`[3] C. 完成 A/B 后的最后一步`。
 3. 粘贴刚才从 **机器 B** 复制过来的 `IP:Port` 和 `PUBLIC KEY`。
 4. 脚本会自动重启服务并执行 Ping 测试。如果 Ping 通，则代表组网大功告成！
 
 ---
-*Secure your intra-network, fast and easy.*
+
+## ⚙️ 后期维护与管理
+
+当隧道建立完毕后，再次运行 `sudo awg` 时，系统会智能侦测到已存在的配置，并解锁**隐藏的 `[0]` 号控制台入口**。
+
+进入 `[0]` 号控制台后，您可以：
+*   **`[2]` 修改 Endpoint**：如果 B 机器更换了 IP 或端口，直接在此修改，回车即热重载。
+*   **`[3]` 修改 PublicKey**：更换对端密钥。
+*   **`[88]` 彻底卸载**：一键安全销毁当前接口的所有痕迹。
+
+---
+*Secure your intra-network, fast, easy, and permanent.*
